@@ -6,14 +6,16 @@
     "version": "1.0",
 
     "browser_action": {
-        "default_icon": "icon.png",
-        "default_popup": "popup.html",
-        "default_title": "Google Mail"
+        "default_icon": "./source/icon.png",
+        "default_popup": "./source/popup.html",
+        "default_title": "专题测试"
     },
     "content_scripts": [{
-        "matches": ["http://*/*"],
-        "css": ["mystyle.css"],
-        "js": ["myscript.js"]
+        "matches": ["http://61.155.159.91:8208/InterVacation/Query/Debug.aspx"],
+        "js": ["./content_scripts/soa.js"]
+    },{
+        "matches": ["http://www.ly.com/zhuanti/*"],
+        "js": ["./content_scripts/target.js"]
     }],
     "permissions": [
     	"tabs",
@@ -21,7 +23,7 @@
         "activeTab"
     ],
     "background": {
-        "scripts": ["background.js","background1.js"],
+        "scripts": ["background.js"],
         "persistent": false
     }
 }
