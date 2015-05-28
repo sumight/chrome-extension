@@ -11,6 +11,20 @@ chrome.runtime.onMessage.addListener(function(message) {
 	}
 });
 
+chrome.runtime.sendMessage(null,{meta:'TDK',data:getTDK()});
+
+/**
+* 获取页面TDK
+* @function getTDK
+* @return {Object} 页面的TDK
+*/
+function getTDK(){
+	var tdk = {}
+	tdk.title = document.querySelector('title').innerText;
+	tdk.description = document.querySelector('meta[name=description]').getAttribute("content");
+	tdk.keywords = document.querySelector('meta[name=keywords]').getAttribute("content")
+	return tdk;
+}
 
 /**
 * 根据blockMapList条件映射列表，获取SOA xml条件和page dom的映射列表

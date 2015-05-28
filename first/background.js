@@ -32,7 +32,9 @@ var soaXmlDom = null
 configText = '{\n'+
     '    "targetUrl": "http://www.ly.com/zhuanti/shuqi_dacu/duanwu.html",\n'+
     '    "pageMeta":{\n'+
-    '\n'+
+    '         "title":"", \n'+
+    '         "description":"",  \n'+
+    '         "keywords":""  \n'+
     '    },\n'+
     '    "activity": {\n'+
     '        "pageIndex": "1",\n'+
@@ -62,7 +64,7 @@ configText = '{\n'+
     '    		}\n'+
     '    		],\n'+
     '    		"pageCondition":{\n'+
-	'        		"triggerQuery":"li[data-areaid=\"3244\"] a",\n'+
+	'        		"triggerQuery":"li[data-areaid=\\\"3244\\\"] a",\n'+
 	'        		"pageRangeQuery":"#part1"\n'+
     '    		}\n'+
     '    	},\n'+
@@ -72,12 +74,13 @@ configText = '{\n'+
     '    			"xmlTagValue":"限量抢面值186元超大流量电话上网卡，赠送3D馆,船游璀璨香江，玩转海洋公园，乐享购物旅程。"\n'+
     '    		}],\n'+
     '    		"pageCondition":{\n'+
-	'        		"triggerQuery":"li[data-areaid=\"3271\"] a",\n'+
+	'        		"triggerQuery":"li[data-areaid=\\\"3271\\\"] a",\n'+
 	'        		"pageRangeQuery":"#part4"\n'+
     '    		}\n'+
     '    	}\n'+
     '    ]\n'+
     '}\n'
+    config=JSON.parse(configText);
     //===============================
 
 
@@ -107,7 +110,6 @@ chrome.runtime.onMessage.addListener(function(message) {
     		// console.log(x);
     	/* fortest end */
     	if(soaCdt_pageHtml_map!==null){
-    		// TODO 下一步处理
     		/* fortest add on*/
     		console.log("next");
     		/* fortest end */
@@ -138,6 +140,13 @@ chrome.runtime.onMessage.addListener(function(message) {
     		afterGetPageData()
     		
     	}
+    }
+    if(message.meta === 'TDK'){
+        var TDK = message.data
+        testTDK(config,TDK);
+        /* testStart add off*/
+        console.log(logs);
+        /* testEnd */
     }
 });
 
@@ -254,7 +263,7 @@ function addErrLog(errLog) {
 */
 function getLogs() {
     /* global logs */
-    return logs;
+    return logObjectToString(logs);
 }
 
 /**
@@ -264,7 +273,26 @@ function getLogs() {
 */
 function getErrLogs() {
     /* global errLogs */
-    return errLogs;
+    return logObjectToString(errLogs);
+}
+
+/**
+* 将logs对象转化为string对象
+* @function logObjectToString
+* @param {Object} logs 日志对象
+*/
+function logObjectToString(logs){
+    var logsStr = '';
+    for(var index in logs){
+        var log = logs[index];
+        var logStr = '';
+        for(var key in log){
+            logStr += (key+":"+log[key]+'<br>');
+        }
+        logStr+='<br>';
+        logsStr += logStr;
+    }
+    return logsStr;
 }
 
 /**
@@ -378,9 +406,9 @@ function extractProduct(dom){
 */
 function testStr(criterion, target, testPoint, description, logItem){
 	if(typeof criterion === 'string'){
-		var result = (criterion === target);
+		var result = (criterion.trim() === target.trim());
 	}else{
-		var result = (criterion.test(target));
+		var result = (criterion.test(target.trim()));
 	}
 	if(!!logItem){
 		logItem.result = logItem.reslult&&result;
@@ -409,9 +437,42 @@ function createLogItem(testPoint, description, testResult){
 	var logItem = {}
 	logItem.date = new Date();
 	/* global pageUrl */
-	logItem.url = pageUrl;
 	logItem.testPoint = testPoint;
 	logItem.description = description;
 	logItem.testResult = testResult;
 	return logItem;
+}
+
+/**
+* 检测TDK
+* @function testTDK
+* @param {Object} configObj 配置对象
+* @param {Object} target 检测的目标对象
+*/
+function testTDK(configObj, target){
+    var testPoint = 'TDK检测'
+    if(!configObj.pageMeta) return;
+    if(!configObj.pageMeta.title) return;
+    if(!configObj.pageMeta.description) return;
+    if(!configObj.pageMeta.keywords) return;
+    
+    testStr(
+        target.title,
+        configObj.pageMeta.title,
+        testPoint,
+        'title检测'
+        );
+    testStr(
+        target.description,
+        configObj.pageMeta.description,
+        testPoint,
+        'description检测'
+        );
+    testStr(
+        target.keywords,
+        configObj.pageMeta.keywords,
+        testPoint,
+        'keywords检测'
+        );
+    console.log('testTDK')
 }
