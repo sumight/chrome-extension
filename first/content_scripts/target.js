@@ -4,16 +4,34 @@ chrome.runtime.sendMessage(null,{meta:'getBlockMapList'});
 chrome.runtime.onMessage.addListener(function(message) {
 	if(message.meta === 'blockMapList'){
 		var blockMapList = message.data
-
+		console.log(blockMapList);
+		mapDOMs(blockMapList,function(domMapList){
+			chrome.runtime.sendMessage(null,{meta:'domMapList',data:domMapList});
+		})
 	}
 });
 
-// 根据区块配置列表获取对应的Node对象
-function mapDOMs(blockMapList){
+
+/**
+* 根据blockMapList条件映射列表，获取SOA xml条件和page dom的映射列表
+* @function mapDOMs
+* @param {Object} blockMapList SOAxml条件和pageQuery的映射
+* @param {Function} cb 在映射全部完成之后调用,传入的参数为domMapList， SOAxml条件和pageDom的映射列表
+*/
+function mapDOMs(blockMapList, cb){
+	var index = 0;
 	var domMapList = [];
-	for(var index in blockMapList){
-		var blockMap = blockMapList[index];
-		if(!!blockMap.triggerQuery&&blockMap.triggerQuery!==""){
+	mapDOM(blockMapList[index],cb);
+	
+	/**
+	* 根据一个页面条件匹配一个页面DOM, 这是一个递归函数，递归的结束条件由index判断
+	* @function mapDOM
+	* @param {Object} blockMap 一个区块条件映射，从xml条件映射 到 页面条件
+	* @param {Function} cb 在最后一个映射完成之后调用
+	*/
+	function mapDOM(blockMap, cb){
+		if(!!blockMap.pageCondition.triggerQuery&&blockMap.pageCondition.triggerQuery!==""){
+			// 如果条件中有触发器
 			var trigger = document.querySelector(blockMap.pageCondition.triggerQuery);
 			trigger.click();
 			var pt = new PulseTrigger();
@@ -22,14 +40,39 @@ function mapDOMs(blockMapList){
 			},false);
 			pt.start(500,function(){
 				var domMap = {}
-				domMap.xmlCondition = blockMap.xmlCondition;
-				domMap.dom = document.querySelector(blockMap.pageCondition.pageRangeQuery);
+				domMap.xmlConditions = blockMap.xmlConditions;
+
+				/* testStart replace off*/
+				// domMap.htmlText = document.querySelector(blockMap.pageCondition.pageRangeQuery).innerText;
+				domMap.htmlText = document.querySelector(blockMap.pageCondition.pageRangeQuery).innerHTML;
+				/* testEnd */
+
+				/* mapDOMs domMapList*/
 				domMapList.push(domMap);
+				/* mapDOMs index */
+				index++
+				/* mapDOMs blockMapList */
+				if(index < blockMapList.length)
+					mapDOM(blockMapList[index],cb);
+				else
+					cb && cb(domMapList);
 			});
+		}else{
+			// 如果没有触发器
+			var domMap = {}
+			domMap.xmlConditions = blockMap.xmlConditions;
+			domMap.htmlText = document.querySelector(blockMap.pageCondition.pageRangeQuery).innerHTML;
+			/* mapDOMs domMapList*/
+			domMapList.push(domMap);
+			/* mapDOMs index */
+			index++
+			/* mapDOMs blockMapList */
+			if(index < blockMapList.length)
+				mapDOM(blockMapList[index],cb);
+			else
+				cb && cb(domMapList);
 		}
 	}
-	// mapDOM 根据区块，匹配一个DOM，返回匹配的DOM
-
 }
 
 

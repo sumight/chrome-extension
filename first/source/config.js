@@ -1,4 +1,7 @@
-document.getElementById('abc').onclick = function() {
-    var bghref = chrome.extension.getBackgroundPage().location.href;
-    chrome.tabs.create({url:bghref},function(tab){})
+var bg = chrome.extension.getBackgroundPage();
+document.getElementById('J_config').value = bg.getConfig();
+document.getElementById('J_save-config').onclick = function() {
+	var configText = document.getElementById('J_config').value;
+	console.log(configText)
+    bg.setConfig(configText);
 }
