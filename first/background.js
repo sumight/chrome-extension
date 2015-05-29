@@ -118,6 +118,7 @@ chrome.runtime.onMessage.addListener(function(message) {
 
     }
     if(message.meta === 'getBlockMapList') {
+        console.log(config.blockMapList)
         chrome.tabs.query({
             url: config.targetUrl
         }, function(tabs) {
@@ -128,7 +129,7 @@ chrome.runtime.onMessage.addListener(function(message) {
     }
     if(message.meta === 'domMapList'){
     	/* testStart add off*/
-    	// alert('domMap数据提交成功'+JSON.stringify(message.data));
+    	console.log('domMap数据提交成功',message.data);
     	/* testEnd */
 
     	soaCdt_pageHtml_map = message.data
@@ -159,9 +160,10 @@ function afterGetPageData(){
 	/* global soaXmlDom */
 	/* global soaCdt_pageHtml_map */
 	var domMaps = getDomMapList(soaXmlDom,soaCdt_pageHtml_map)
-	/* fortest start add*/ 
-	console.log(domMaps)
-	/* fortest end */
+
+    /* fortest */
+    // console.log(domMaps);
+
 	testAllProducts(domMaps);
 }
 
@@ -175,7 +177,7 @@ function afterGetPageData(){
 function testAllProducts(domMaps){
 	for(var key in domMaps){
 		var domMap = domMaps[key];
-		testBlock(blockMap);
+		testBlock(domMap);
 	}
 }
 
@@ -207,10 +209,22 @@ function testBlock(blockMap){
 function testProduct(soaProInfo, targetProInfo){
 	var txt = targetProInfo.innerText;
 	for(key in config.productMap.fieldList){
-		var field = fieldList[key];
+		var field = config.productMap.fieldList[key]; 
+        if(soaProInfo.getElementsByTagName(field.xmlTagName).length<1){
+            testStr('true', 'false', '测试配置','产品字段配置错误，错误字段：'+JSON.stringify(field));
+            continue;
+        }
+        if(!soaProInfo.getElementsByTagName(field.xmlTagName)[0].firstChild){
+            testStr('true', 'false', '测试配置','产品字段配置错误，错误字段：'+JSON.stringify(field));
+            continue;
+        }
+        if(!targetProInfo.querySelector(field.htmlQuery)){
+            testStr('true', 'false', '测试配置','产品字段配置错误，错误字段：'+JSON.stringify(field));
+            continue;
+        }
 		var soaField = soaProInfo.getElementsByTagName(field.xmlTagName)[0].firstChild.nodeValue;
 		var targetField = targetProInfo.querySelector(field.htmlQuery).innerText;
-		testStr(soaField, targetField, '产品测试','产品文本：'+txt);
+		testStr(soaField, targetField, '产品测试','产品文本：'+txt+" 字段："+field.fieldName);
 	}
 }
 
@@ -224,6 +238,8 @@ function setConfig(_config) {
     configText = _config;
     /* global config */
     config = JSON.parse(configText);
+
+    console.log(config);
 }
 
 /**
@@ -359,10 +375,18 @@ function queryXmlDomByCondition(xmlDom, conditions){
 		var proInfo = proInfoList[index];
 		if(typeof proInfo === 'number') break;
 		for(var ind in conditions){
+            var pass = false;
 			var condition = conditions[ind];
+            if(proInfo.getElementsByTagName(condition.xmlTagName).length<1){
+                pass0 = false;
+                break;
+            }
+            if(!proInfo.getElementsByTagName(condition.xmlTagName)[0].firstChild){
+                pass0 = false;
+                break;
+            }
 			var realValue = proInfo.getElementsByTagName(condition.xmlTagName)[0].firstChild.nodeValue;
 			var criterion = condition.xmlTagValue;
-			var pass = false;
 			if(criterion instanceof RegExp){
 				// 假如为正则表达式
 				pass = criterion.test(realValue);
@@ -377,6 +401,9 @@ function queryXmlDomByCondition(xmlDom, conditions){
 		}
 		if(pass0){
 			result.push(proInfo);
+            /* fortest */
+            console.log((new XMLSerializer()).serializeToString(proInfo));
+            /* fortest end */
 		}
 	}
 	return result;

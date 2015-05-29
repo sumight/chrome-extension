@@ -33,6 +33,7 @@ function getTDK(){
 * @param {Function} cb 在映射全部完成之后调用,传入的参数为domMapList， SOAxml条件和pageDom的映射列表
 */
 function mapDOMs(blockMapList, cb){
+	console.log(blockMapList)
 	var index = 0;
 	var domMapList = [];
 	mapDOM(blockMapList[index],cb);
@@ -44,6 +45,7 @@ function mapDOMs(blockMapList, cb){
 	* @param {Function} cb 在最后一个映射完成之后调用
 	*/
 	function mapDOM(blockMap, cb){
+
 		if(!!blockMap.pageCondition.triggerQuery&&blockMap.pageCondition.triggerQuery!==""){
 			// 如果条件中有触发器
 			var trigger = document.querySelector(blockMap.pageCondition.triggerQuery);
